@@ -1,3 +1,7 @@
-mysamples:
-  - "HelanoUV_R2_ATAC_CGTACTAG-AGAGTAGA_S11_L001_R1_001"
-  - "HelanoUV_R2_ATAC_CGTACTAG-AGAGTAGA_S11_L001_R2_001"
+meta: 
+  HelanoUV_R1_ATAC:
+  HelanoUV_R2_ATAC: 
+
+genome:
+  build: "hg38_r44"
+  link: "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/GRCh38.p14.genome.fa.gz"

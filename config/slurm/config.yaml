@@ -1,10 +1,10 @@
-jobs: 100000000
+jobs: 100
 
 # Configure for Snakemake >= 8.0
 executor: "cluster-generic"
 cluster-generic-submit-cmd: "sbatch -A {resources.account} -p {resources.partition} -J {rule}.job --qos {resources.partition} --cpus-per-task={threads} -e logs/cluster/{rule}_%A.err --output=/dev/null" 
 software-deployment-method: "conda"
-default-resources: [account='mdbf', partition='mid_mdbf']
+default-resources: [account='investor', partition='long_investor']
 
 
 printshellcmds: True
