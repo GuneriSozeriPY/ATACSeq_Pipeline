@@ -1,0 +1,3 @@
+name: macs2
+dependencies:
+  - bioconda::deepTools ==2.2.9.1

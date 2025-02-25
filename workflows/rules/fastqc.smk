@@ -1,10 +1,18 @@
 rule fastqc:
     input:
-        "results/{sample}.fastq",
+        read1="resources/samples/{sample}_1.fastq.gz", 
+        read2="resources/samples/{sample}_2.fastq.gz",
     output:
-        "results/{sample}_fastqc.html",
-        "results/{sample}_fastqc.zip",
-    threads: 16
+        html="results/processed_files/{sample}_1_fastqc.html", 
+        zip="results/processed_files/{sample}_1_fastqc.zip", 
+        html2="results/processed_files/{sample}_2_fastqc.html", 
+        zip2="results/processed_files/{sample}_2_fastqc.zip", 
+    wildcard_constraints:
+        sample='|'.join(config["meta"].keys()),
+    log:
+        "logs/rule/fastqc/{sample}.log",
+    benchmark:
+        "logs/rule/fastqc/{sample}.benchmark.txt",
     log:
         "logs/fastqc/{sample}.log",
     benchmark:
@@ -13,5 +21,11 @@ rule fastqc:
         "../envs/fastqc.yaml",
     shell:
         """
-        fastqc -t {threads} -o results/ {input} > {log} 2>&1
-        """ 
+       (echo "`date -R`: fastqc starts..." &&
+        fastqc -t {threads} -o results/processed_files {input.read1} &&
+        fastqc -t {threads} -o results/processed_files {input.read2} &&
+        echo "`date -R`: fastqc is successful!" || 
+        (echo "`date -R`: Process failed..."; exit 1)) \
+        >> {log} 2>&1
+        """
+
