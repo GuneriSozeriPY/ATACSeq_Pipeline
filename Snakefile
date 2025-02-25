@@ -1,14 +1,14 @@
-
-
 configfile: "config/config.yaml"
 
 include: "workflows/rules/common.smk"
 
+wildcard_constraints:
+    build=config["genome"]["build"],
+
 rule all:
     input:
-        #config["mysamples"],
-        lambda w: allInput(config["mysamples"]),
+        lambda w: allInput(config["genome"]["build"], config["meta"]),
 
-include: "workflows/rules/unzip.smk"
+include: "workflows/rules/prepare_genome.smk"
 
 include: "workflows/rules/fastqc.smk"
