@@ -12,3 +12,5 @@ rule all:
 include: "workflows/rules/prepare_genome.smk"
 
 include: "workflows/rules/fastqc.smk"
+
+include: "workflows/rules/fastp.smk"
