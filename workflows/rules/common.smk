@@ -41,5 +41,7 @@ def allInput(build, metadata):
         inputlist.append(f"{sdir}/{sample}_1_fastqc.html")
         inputlist.append(f"{sdir}/{sample}_2_fastqc.html")
         inputlist.append(f"resources/ref_genomes/{build}/genome_{build}.ron")
+        inputlist.append(f"{sdir}/{sample}_fastp_dedup_adap_1.fastq.gz")
+        inputlist.append(f"{sdir}/{sample}_fastp_dedup_adap_2.fastq.gz")
 
     return inputlist
