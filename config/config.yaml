@@ -1,6 +1,6 @@
 meta: 
-  HelanoUV_R1_ATAC:
-  HelanoUV_R2_ATAC: 
+  HelanoUV_R1_ATAC: {}
+  HelanoUV_R2_ATAC: {}
 
 genome:
   build: "hg38_r44"
