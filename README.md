@@ -13,3 +13,13 @@ conda create -c conda-forge -c bioconda -c r -n atac_snakemake snakemake=8.11.3
 conda activate atac_snakemake
 pip install snakemake-executor-plugin-cluster-generic
 ```
+
+```
+screen -S atac_snakemake
+screen -xS atac_snakemake 
+```
+
+```
+cd ATACSeq_Pipeline
+snakemake --profile config/slurm/ --use-conda --conda-frontend conda --rerun-incomplete
+```
