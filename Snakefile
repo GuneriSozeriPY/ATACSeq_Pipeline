@@ -14,3 +14,7 @@ include: "workflows/rules/prepare_genome.smk"
 include: "workflows/rules/fastqc.smk"
 
 include: "workflows/rules/fastp.smk"
+
+include: "workflows/rules/alignment.smk"
+
+include: "workflows/rules/macs2.smk"
