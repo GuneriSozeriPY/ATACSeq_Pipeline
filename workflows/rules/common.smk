@@ -43,5 +43,15 @@ def allInput(build, metadata):
         inputlist.append(f"resources/ref_genomes/{build}/genome_{build}.ron")
         inputlist.append(f"{sdir}/{sample}_fastp_dedup_adap_1.fastq.gz")
         inputlist.append(f"{sdir}/{sample}_fastp_dedup_adap_2.fastq.gz")
+        inputlist.append(f"{sdir}/{sample}_fastp_dedup_adap_1_fastqc.html")
+        inputlist.append(f"{sdir}/{sample}_fastp_dedup_adap_2_fastqc.html")
+        inputlist.append(f"results/{sample}/{sample}_{build}.bam")
+        inputlist.append(f"results/{sample}/{sample}_{build}_sorted.bam")
+        inputlist.append(f"results/{sample}/{sample}_{build}_sorted.filtered.bam")
+        inputlist.append(f"results/{sample}/{sample}_{build}_sorted.dup.txt")
+        inputlist.append(f"results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam")
+        inputlist.append(f"results/{sample}/{sample}_{build}_coverage_RPKM.bw")
+        inputlist.append(f"{sdir}/{sample}_{build}_blacklist-filtered.fraglen.pdf")
+        inputlist.append(f"{sdir}/{sample}_{build}_narrow_peaks.narrowPeak")
 
     return inputlist

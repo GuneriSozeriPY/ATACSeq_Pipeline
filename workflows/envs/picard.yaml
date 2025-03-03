@@ -1,0 +1,5 @@
+name: picard
+dependencies:
+  - bioconda::picard =2.27
+  - bioconda::samtools =1.15
+  

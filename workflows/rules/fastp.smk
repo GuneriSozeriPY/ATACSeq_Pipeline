@@ -26,3 +26,28 @@ rule fastp:
         > {log} 2>&1
         """
 
+rule fastqc_afteraln:
+    input:
+        read1=rules.fastp.output.trimmed1, 
+        read2=rules.fastp.output.trimmed2,
+    output:
+        html="results/processed_files/{sample}_fastp_dedup_adap_{rep}_fastqc.html", 
+        zip="results/processed_files/{sample}_fastp_dedup_adap_{rep}_fastqc.zip",  
+    threads: 16
+    log:
+        "logs/fastqc/{sample}_fastp_dedup_adap_{rep}.log",
+    benchmark:
+        "logs/fastqc/{sample}_fastp_dedup_adap_{rep}.benchmark.log",
+    conda:
+        "../envs/fastqc.yaml",
+    shell:
+        """
+       (echo "`date -R`: fastqc after trimming starts..." &&
+        echo {input.read1} &&
+        fastqc -t {threads} -o results/processed_files {input.read1} &&
+        fastqc -t {threads} -o results/processed_files {input.read2} &&
+        echo "`date -R`: fastqc is successful!" || 
+        (echo "`date -R`: Process failed..."; exit 1)) \
+        > {log} 2>&1
+        """
+
