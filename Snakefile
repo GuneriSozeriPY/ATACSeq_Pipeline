@@ -18,3 +18,4 @@ include: "workflows/rules/fastp.smk"
 include: "workflows/rules/alignment.smk"
 
 include: "workflows/rules/macs2.smk"
+
