@@ -3,11 +3,11 @@ rule bowtie2:
         fastp_sample=[rules.fastp.output.trimmed1, rules.fastp.output.trimmed2],
         bowtie2="resources/ref_genomes/{build}/Bowtie2/genome_{build}.1.bt2",
     output:
-        bam="results/{sample}/{sample}_{build}.bam",
+        bam=temp("results/{sample}/{sample}_{build}.bam"),
     params:
         ref_genome="resources/ref_genomes/{build}/Bowtie2/genome_{build}",
         extra="--local --very-sensitive --no-mixed --no-discordant -I 25 -X 700 --seed 42",
-    threads: 32  
+    threads: 16  
     log:
         "logs/rule/bowtie2/{sample}_{build}.log",
     benchmark:
@@ -28,11 +28,11 @@ rule post_alignment:
     input:
         bowtie2=rules.bowtie2.output.bam,
     output:
-        sorted_bam="results/{sample}/{sample}_{build}_sorted.bam",
+        sorted_bam=temp("results/{sample}/{sample}_{build}_sorted.bam"),
     params:
         ref_genome="resources/ref_genomes/{build}/Bowtie2/genome_{build}",
         extra="--local --very-sensitive --no-mixed --no-discordant -I 25 -X 700 --seed 42",
-    threads: 32  
+    threads: 16  
     log:
         "logs/rule/bowtie2/{sample}_{build}_post_alignment.log",
     benchmark:
@@ -61,7 +61,7 @@ rule filter_bam:
         dup_metrics=temp("results/{sample}/{sample}_{build}_sorted.dup.metrics"),
         dup_txt="results/{sample}/{sample}_{build}_sorted.dup.txt",
         filtered_bam=temp("results/{sample}/{sample}_{build}_sorted.filtered.bam"),
-    threads: 32  
+    threads: 16  
     log:
         "logs/rule/bowtie2/{sample}_{build}_filter_bam.log",
     benchmark:
@@ -93,7 +93,7 @@ rule filter_blacklist:
     output:
         tmp_bam=temp("results/{sample}/{sample}_{build}_sorted.tmp.bam"),
         blacklistfiltered_bam="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam",
-    threads: 32  
+    threads: 16  
     log:
         "logs/rule/bowtie2/{sample}_{build}_filter_blacklist.log",
     benchmark:
@@ -115,7 +115,7 @@ rule bam2bw:
         blacklistfiltered_bam=rules.filter_blacklist.output.blacklistfiltered_bam,
     output:
         bw="results/{sample}/{sample}_{build}_coverage_RPKM.bw",
-    threads: 32  
+    threads: 16  
     log:
         "logs/rule/bowtie2/{sample}_{build}_bam2bw.log",
     benchmark:
@@ -139,7 +139,7 @@ rule legthdist:
     output:
         fraglen_stats="results/{sample}/{sample}_{build}_blacklist-filtered.fraglen.stats",
         fraglen_pdf="results/processed_files/{sample}_{build}_blacklist-filtered.fraglen.pdf",
-    threads: 32  
+    threads: 16  
     log:
         "logs/rule/bowtie2/{sample}_{build}_legthdist.log",
     benchmark:

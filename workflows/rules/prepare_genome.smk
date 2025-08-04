@@ -66,14 +66,3 @@ rule genome_indexing:
         {{ echo "`date -R`: Process failed..."; exit 1; }}  ) > {log} 2>&1
         """
 
-rule genome_index2ron:
-    input:
-        rules.genome_indexing.output,
-    output:
-        "resources/ref_genomes/{build}/genome_{build}.ron",
-    log:
-        "logs/rule/genome_index2ron/{build}.log",
-    benchmark:
-        "logs/rule/genome_index2ron/{build}.benchmark.txt",
-    shell:
-        "python3 workflows/scripts/idx2ron.py -i {input} -o {output} -l {log}"

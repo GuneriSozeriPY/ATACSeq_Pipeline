@@ -3,14 +3,14 @@ rule fastp:
         read1="resources/samples/{sample}_1.fastq.gz", 
         read2="resources/samples/{sample}_2.fastq.gz",
     output:
-        trimmed1="results/processed_files/{sample}_fastp_dedup_adap_1.fastq.gz", 
-        trimmed2="results/processed_files/{sample}_fastp_dedup_adap_2.fastq.gz", 
+        trimmed1=temp("results/processed_files/{sample}_fastp_dedup_adap_1.fastq.gz"), 
+        trimmed2=temp("results/processed_files/{sample}_fastp_dedup_adap_2.fastq.gz"), 
         htmlfastp="results/processed_files/{sample}_fastp_dedup_adap_trimming.html", 
     threads: 16
     log:
-        "logs/fastp/{sample}.log",  
+        "logs/rule/fastp/{sample}.log",  
     benchmark:
-        "logs/fastp/{sample}.benchmark.log",  
+        "logs/rule/fastp/{sample}.benchmark.log",  
     conda:
         "../envs/fastp.yaml",
     shell:
@@ -32,12 +32,12 @@ rule fastqc_afteraln:
         read2=rules.fastp.output.trimmed2,
     output:
         html="results/processed_files/{sample}_fastp_dedup_adap_{rep}_fastqc.html", 
-        zip="results/processed_files/{sample}_fastp_dedup_adap_{rep}_fastqc.zip",  
+        zip=temp("results/processed_files/{sample}_fastp_dedup_adap_{rep}_fastqc.zip"),  
     threads: 16
     log:
-        "logs/fastqc/{sample}_fastp_dedup_adap_{rep}.log",
+        "logs/rule/fastqc/{sample}_fastp_dedup_adap_{rep}.log",
     benchmark:
-        "logs/fastqc/{sample}_fastp_dedup_adap_{rep}.benchmark.log",
+        "logs/rule/fastqc/{sample}_fastp_dedup_adap_{rep}.benchmark.log",
     conda:
         "../envs/fastqc.yaml",
     shell:

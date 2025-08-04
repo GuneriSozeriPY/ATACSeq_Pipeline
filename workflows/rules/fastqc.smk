@@ -8,9 +8,9 @@ rule fastqc:
         sample='|'.join(config["meta"].keys()),
     threads: 16
     log:
-        "logs/fastqc/{sample}_{rep}.log",
+        "logs/rule/fastqc/{sample}_{rep}.log",
     benchmark:
-        "logs/fastqc/{sample}_{rep}.benchmark.log",
+        "logs/rule/fastqc/{sample}_{rep}.benchmark.log",
     conda:
         "../envs/fastqc.yaml",
     shell:
