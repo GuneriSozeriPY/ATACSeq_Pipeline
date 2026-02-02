@@ -1,0 +1,3 @@
+name: idr
+dependencies:
+  - bioconda::idr ==2.0.4.2

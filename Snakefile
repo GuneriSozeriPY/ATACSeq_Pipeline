@@ -7,7 +7,7 @@ wildcard_constraints:
 
 rule all:
     input:
-        lambda w: allInput(config["genome"]["build"], config["meta"]),
+        lambda w: allInput(config["genome"]["build"], config["meta"], config.get("conditions"))
 
 include: "workflows/rules/prepare_genome.smk"
 
@@ -17,5 +17,6 @@ include: "workflows/rules/fastp.smk"
 
 include: "workflows/rules/alignment.smk"
 
-include: "workflows/rules/macs2.smk"
+include: "workflows/rules/macs2_idr.smk"
+
 

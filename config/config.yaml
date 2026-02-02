@@ -1,12 +1,42 @@
 meta: 
+  HelanoUV_R3_ATAC_combined26: {}
+  HelanoUV_R1_ATAC_TAAGGCGA-TAGATCGC_S7_combined26: {}
+  Hela_1h_R1_ATAC_combined26: {}
+  Hela_1h_R3_ATAC_combined26: {}
+  Hela_1m_R1_ATAC_combined26: {}
   Hela_1m_R3_ATAC_AGGCAGAA-CTCTCTAT_S3: {}
+  Hela_4h_R1_ATAC: {}
   Hela_4h_R3_ATAC_TCCTGAGC-CTCTCTAT_S4: {}
-  Hela_8h_R1_ATAC_CGTACTAG-TATCCTCT_S5: {}
+  Hela_8h_R1_ATAC_CGTACTAG-TATCCTCT_S5_combined26: {}
   Hela_8h_R3_ATAC_TCCTGAGC-TATCCTCT_S6: {}
   Hela_15m_R1_ATAC_TAAGGCGA-TATCCTCT_S1: {}
   Hela_15m_R3_ATAC_AGGCAGAA-TATCCTCT_S2: {}
-  HelanoUV_R1_ATAC_TAAGGCGA-TAGATCGC_S7: {}
+  Hela_30m_R1_ATAC_combined26: {}
+  Hela_30m_R3_ATAC_combined26: {}
 
 genome:
   build: "hg38_r44"
   link: "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/GRCh38.p14.genome.fa.gz"
+
+conditions:
+  HelanoUV:
+    - "HelanoUV_R3_ATAC_combined26"
+    - "HelanoUV_R1_ATAC_TAAGGCGA-TAGATCGC_S7_combined26"
+  Hela_1h:
+    - "Hela_1h_R1_ATAC_combined26"
+    - "Hela_1h_R3_ATAC_combined26"
+  Hela_1m:
+    - "Hela_1m_R1_ATAC_combined26"
+    - "Hela_1m_R3_ATAC_AGGCAGAA-CTCTCTAT_S3"
+  Hela_4h:
+    - "Hela_4h_R1_ATAC"
+    - "Hela_4h_R3_ATAC_TCCTGAGC-CTCTCTAT_S4"
+  Hela_8h:
+    - "Hela_8h_R1_ATAC_CGTACTAG-TATCCTCT_S5_combined26"
+    - "Hela_8h_R3_ATAC_TCCTGAGC-TATCCTCT_S6"
+  Hela_15m:
+    - "Hela_15m_R1_ATAC_TAAGGCGA-TATCCTCT_S1"
+    - "Hela_15m_R3_ATAC_AGGCAGAA-TATCCTCT_S2"
+  Hela_30m:
+    - "Hela_30m_R1_ATAC_combined26"
+    - "Hela_30m_R3_ATAC_combined26"

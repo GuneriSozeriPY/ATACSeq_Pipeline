@@ -1,0 +1,3 @@
+name: macs3
+dependencies:
+  - bioconda::macs3 ==3.0.3

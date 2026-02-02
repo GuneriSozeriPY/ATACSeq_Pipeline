@@ -115,7 +115,7 @@ rule bam2bw:
         blacklistfiltered_bam=rules.filter_blacklist.output.blacklistfiltered_bam,
     output:
         bw="results/{sample}/{sample}_{build}_coverage_RPKM.bw",
-    threads: 16  
+    threads: 8  
     log:
         "logs/rule/bowtie2/{sample}_{build}_bam2bw.log",
     benchmark:
@@ -139,7 +139,7 @@ rule legthdist:
     output:
         fraglen_stats="results/{sample}/{sample}_{build}_blacklist-filtered.fraglen.stats",
         fraglen_pdf="results/processed_files/{sample}_{build}_blacklist-filtered.fraglen.pdf",
-    threads: 16  
+    threads: 8  
     log:
         "logs/rule/bowtie2/{sample}_{build}_legthdist.log",
     benchmark:
@@ -156,3 +156,6 @@ rule legthdist:
         echo "`date -R`: Success! Generating length distribution of counts is done." || 
         {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
         """
+
+
+
