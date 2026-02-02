@@ -46,7 +46,7 @@ rule macs2_relaxed:
         """
 
 # 2. Sort Peaks by P-value
-# HBC Requirement: "narrowPeak files have to be sorted by the -log10(p-value) column"
+# IDR Requirement: "narrowPeak files have to be sorted by the -log10(p-value) column"
 rule sort_peaks_for_idr:
     input:
         peaks="results/macs2/{sample}_{build}_narrow_peaks.narrowPeak"
@@ -54,12 +54,10 @@ rule sort_peaks_for_idr:
         sorted_peaks="results/macs2/{sample}_{build}_narrow_peaks.sorted.narrowPeak"
     shell:
         """
-        # Column 8 is -log10(p-value) in narrowPeak format
-        # -k8,8nr means: Sort key is col 8, numeric, reverse (descending)
         sort -k8,8nr {input.peaks} > {output.sorted_peaks}
         """
 
-# 2. Run IDR Analysis
+# 3. Run IDR Analysis
 rule run_idr:
     input:
         peaks=get_replicates_sorted_peaks
@@ -69,7 +67,7 @@ rule run_idr:
     log:
         "logs/idr/{condition}_{build}_relaxed.log"
     params:
-        threshold=0.05, # The final IDR cutoff
+        threshold=0.05, 
         outdir="results/idr"
     conda:
         "../envs/idr.yaml"
@@ -84,12 +82,11 @@ rule run_idr:
             --plot 
 
         # Filter for peaks passing the IDR threshold (Col 5 is scaled IDR score)
-        # IDR score of 540 = -125*log2(0.05) approx
-        # Standard approach: Filter rows where global IDR <= 0.05
+        # IDR score of 540 = -125*log2(0.05) approx.
         awk '$5 >= 540 {{print $0}}' {output.idr_out} > {output.idr_peaks}
         """
 
-# 3. Merge Replicate BAMs
+# 4. Merge Replicate BAMs
 rule merge_replicates:
     input:
         bams=get_replicates_bam
@@ -105,7 +102,7 @@ rule merge_replicates:
         samtools index {output.merged_bam}
         """
 
-# 4. Generate Pooled BigWig
+# 5. Generate Pooled BigWig
 rule pooled_bam2bw:
     input:
         bam=rules.merge_replicates.output.merged_bam,
