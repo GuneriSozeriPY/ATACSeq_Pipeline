@@ -4,7 +4,7 @@ rule macs2:
     output:
         summits="results/processed_files/{sample}_{build}_narrow_summits.bed",
     params:
-        extra="--format BAM --bdg --SPMR --nomodel --shift -37 --extsize 73 -g 2701495711 --keep-dup all -q 0.05",
+        extra="--format BAM --bdg --SPMR --nomodel --shift -100 --extsize 200 -g 2701495711 --keep-dup all -q 0.05",
         name="{sample}_{build}_narrow",
     threads: 5
     log:

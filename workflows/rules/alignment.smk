@@ -89,7 +89,7 @@ rule filter_bam:
 rule filter_blacklist:
     input:
         filtered_bam=rules.filter_bam.output.filtered_bam,
-        blacklist="resources/blacklists/hg38-blacklist.v2.bed"
+        blacklist="resources/blacklists/ENCFF356LFX.bed"
     output:
         tmp_bam=temp("results/{sample}/{sample}_{build}_sorted.tmp.bam"),
         blacklistfiltered_bam="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam",
