@@ -51,3 +51,4 @@ partition with the `adelab` account; per-rule memory and runtime are set in the 
 | `results/qc/hg38_atac_qc_summary.tsv` | per-sample QC table |
 | `results/multiqc/hg38_multiqc_report.html` | MultiQC report |
 | `results/differential/{cell_line}_hg38/` | consensus peaks, DiffBind tables per contrast, summary, plots (PCA, heatmap, MA), DBA object (`diffbind.rds`) |
+| `results/differential/{cell_line}_hg38/deseq2/` | plain DESeq2 on featureCounts (full-width consensus peaks): counts, tables per contrast, summary, plots (PCA, MA), `dds.rds` |

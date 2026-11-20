@@ -90,6 +90,7 @@ def allInput():
     for cell_line in CELL_LINES:
         if contrasts_of_cell_line(cell_line):
             targets.append(f"results/differential/{cell_line}_{build}/summary.tsv")
+            targets.append(f"results/differential/{cell_line}_{build}/deseq2/summary.tsv")
 
     targets.append(f"results/qc/{build}_atac_qc_summary.tsv")
     targets.append(f"results/multiqc/{build}_multiqc_report.html")

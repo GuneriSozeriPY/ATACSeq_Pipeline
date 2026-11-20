@@ -35,10 +35,13 @@ bigwig:
   normalize: "RPKM"
 
 differential:
-  # DiffBind (DESeq2 inside), per cell line, design ~ Replicate + Condition.
+  # Two analyses per cell line, both design ~ Replicate + Condition:
+  #   DiffBind (DESeq2 inside) -> results/differential/<cell>_<build>/
+  #   plain DESeq2 on featureCounts -> results/differential/<cell>_<build>/deseq2/
   reference: "noUV"     # every other condition is compared to this one, per cell line
   fdr: 0.05
   # "lib" = total library size (DiffBind default, robust when many peaks change);
   # "RLE" = DESeq2 median-of-ratios on reads in peaks.
   normalization: "lib"
   summit_width: 250     # consensus peaks re-centred on summits, +/- this many bp
+  deseq2_min_count: 10  # DESeq2: keep peaks with >= this many fragments in >= 2 samples
