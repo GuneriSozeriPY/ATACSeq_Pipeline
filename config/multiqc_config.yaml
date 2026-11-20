@@ -1,0 +1,23 @@
+# MultiQC settings for the ATAC-seq report.
+# FastQC runs twice so raw and trimmed reports don't overwrite each other
+# (their sample names are identical once MultiQC trims the file names).
+module_order:
+  - fastqc:
+      name: "FastQC (raw reads)"
+      anchor: "fastqc_raw"
+      info: "on the raw FASTQ files."
+      path_filters_exclude:
+        - "*.trimmed_fastqc.zip"
+  - fastp
+  - fastqc:
+      name: "FastQC (trimmed reads)"
+      anchor: "fastqc_trimmed"
+      info: "on reads after fastp adapter and poly-G trimming."
+      path_filters:
+        - "*.trimmed_fastqc.zip"
+  - bowtie2
+  - samtools
+  - picard
+  - macs2:
+      name: "MACS3"
+      info: "callpeak on Tn5-shifted reads (MultiQC's MACS2 module reads MACS3 output)."

@@ -1,22 +1,22 @@
 configfile: "config/config.yaml"
 
+
 include: "workflows/rules/common.smk"
 
-wildcard_constraints:
-    build=config["genome"]["build"],
+
+onstart:
+    shell("mkdir -p logs/slurm")  # sbatch writes job logs here
+
 
 rule all:
     input:
-        lambda w: allInput(config["genome"]["build"], config["meta"], config.get("conditions"))
+        allInput(),
+
 
 include: "workflows/rules/prepare_genome.smk"
-
 include: "workflows/rules/fastqc.smk"
-
 include: "workflows/rules/fastp.smk"
-
 include: "workflows/rules/alignment.smk"
-
-include: "workflows/rules/macs2_idr.smk"
-
-
+include: "workflows/rules/peaks.smk"
+include: "workflows/rules/qc.smk"
+include: "workflows/rules/differential.smk"

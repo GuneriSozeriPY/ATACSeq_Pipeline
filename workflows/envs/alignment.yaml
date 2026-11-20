@@ -1,8 +1,10 @@
 name: alignment
+channels:
+  - conda-forge
+  - bioconda
 dependencies:
-  - bioconda::bowtie2 ==2.5.4
-  - bioconda::samtools ==1.21
-  - bioconda::bedtools ==2.31.1
-  - bioconda::picard ==2.18.7
-  - bioconda::htslib =1.21
-
+  - bowtie2 =2.5.4
+  - samtools =1.21
+  - htslib =1.21
+  - bedtools =2.31.1
+  - picard =3.1.1

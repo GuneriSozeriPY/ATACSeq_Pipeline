@@ -1,161 +1,209 @@
+################### Alignment, filtering, Tn5 shift, coverage ###################
+
+
 rule bowtie2:
     input:
-        fastp_sample=[rules.fastp.output.trimmed1, rules.fastp.output.trimmed2],
-        bowtie2="resources/ref_genomes/{build}/Bowtie2/genome_{build}.1.bt2",
+        reads=[rules.fastp.output.trimmed1, rules.fastp.output.trimmed2],
+        index="resources/ref_genomes/{build}/Bowtie2/genome_{build}.1.bt2",
     output:
-        bam=temp("results/{sample}/{sample}_{build}.bam"),
+        bam=temp("results/alignment/{sample}/{sample}_{build}.sorted.bam"),
+        bai=temp("results/alignment/{sample}/{sample}_{build}.sorted.bam.bai"),
     params:
-        ref_genome="resources/ref_genomes/{build}/Bowtie2/genome_{build}",
-        extra="--local --very-sensitive --no-mixed --no-discordant -I 25 -X 700 --seed 42",
-    threads: 16  
+        index="resources/ref_genomes/{build}/Bowtie2/genome_{build}",
+        extra=config["alignment"]["bowtie2"],
+        tmp="results/alignment/{sample}/{sample}_{build}.sorttmp",
+    threads: 16
+    resources:
+        mem_mb=32000,
+        runtime=1440,
     log:
-        "logs/rule/bowtie2/{sample}_{build}.log",
+        "logs/bowtie2/{sample}_{build}.log",
     benchmark:
-        "logs/rule/bowtie2/{sample}_{build}.benchmark.txt",
+        "logs/bowtie2/{sample}_{build}.benchmark.txt"
     conda:
         "../envs/alignment.yaml"
-    shell:  
+    shell:
+        # bowtie2's alignment summary goes to the log (MultiQC reads it from there).
+        # Read group is set here, so no separate reheader step is needed.
         """
-        (echo "`date -R`: Aligning fastq files..." &&
-        bowtie2 \
-        -p {threads} {params.extra} -x {params.ref_genome} \
-        -1 {input.fastp_sample[0]} -2 {input.fastp_sample[1]} | samtools view -bS - > {output.bam} &&
-        echo "`date -R`: Success! Alignment is done." || 
-        {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
+        (echo "`date -R`: Aligning and sorting..." &&
+        bowtie2 -p {threads} {params.extra} -x {params.index} \
+            --rg-id {wildcards.sample} --rg SM:{wildcards.sample} \
+            --rg LB:{wildcards.sample} --rg PL:ILLUMINA \
+            -1 {input.reads[0]} -2 {input.reads[1]} |
+        samtools sort -@ 4 -m 2G -T {params.tmp} -o {output.bam} - &&
+        samtools index {output.bam} &&
+        echo "`date -R`: Success! Alignment is done." ||
+        {{ echo "`date -R`: Process failed..."; exit 1; }} ) > {log} 2>&1
         """
 
-rule post_alignment:
-    input:
-        bowtie2=rules.bowtie2.output.bam,
-    output:
-        sorted_bam=temp("results/{sample}/{sample}_{build}_sorted.bam"),
-    params:
-        ref_genome="resources/ref_genomes/{build}/Bowtie2/genome_{build}",
-        extra="--local --very-sensitive --no-mixed --no-discordant -I 25 -X 700 --seed 42",
-    threads: 16  
-    log:
-        "logs/rule/bowtie2/{sample}_{build}_post_alignment.log",
-    benchmark:
-        "logs/rule/bowtie2/{sample}_{build}_post_alignment.benchmark.txt",
-    conda:
-        "../envs/alignment.yaml"
-    shell:  
-        """
-        (echo "`date -R`: Aligning fastq files..." &&
-        samtools sort {input.bowtie2} -o {output.sorted_bam} &&
-        samtools index {output.sorted_bam} &&
-        echo "`date -R`: Success! Alignment is done." || 
-        {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
-        """
 
 rule filter_bam:
+    """Keep canonical chromosomes, mark duplicates, keep properly paired MAPQ>=min reads."""
     input:
-        sorted_bam=rules.post_alignment.output.sorted_bam,
+        bam=rules.bowtie2.output.bam,
+        bai=rules.bowtie2.output.bai,
     output:
-        idxstats="results/{sample}/{sample}_{build}_sorted.idxstats",
-        flagstat="results/{sample}/{sample}_{build}_sorted.flagstat",
-        rmChrM_bam=temp("results/{sample}/{sample}_{build}_sorted.rmChrM.bam"),
-        rmChrM_reheaded_bam=temp("results/{sample}/{sample}_{build}_sorted.rmChrM.reheaded.bam"),
-        marked_bam=temp("results/{sample}/{sample}_{build}_sorted.marked.bam"),
-        marked_bai=temp("results/{sample}/{sample}_{build}_sorted.marked.bai"),
-        dup_metrics=temp("results/{sample}/{sample}_{build}_sorted.dup.metrics"),
-        dup_txt="results/{sample}/{sample}_{build}_sorted.dup.txt",
-        filtered_bam=temp("results/{sample}/{sample}_{build}_sorted.filtered.bam"),
-    threads: 16  
-    log:
-        "logs/rule/bowtie2/{sample}_{build}_filter_bam.log",
-    benchmark:
-        "logs/rule/bowtie2/{sample}_{build}_filter_bam.benchmark.txt",
-    conda:
-        "../envs/alignment.yaml"
-    shell:  
-        """
-        (echo "`date -R`: filter_bam runs..." &&
-        samtools idxstats {input.sorted_bam} > {output.idxstats} &&
-        samtools flagstat {input.sorted_bam} > {output.flagstat} &&
-        samtools view -h {input.sorted_bam} | grep -v chrM | samtools sort -O bam -o {output.rmChrM_bam} -T . &&
-        echo "reheading the bam file" &&
-        samtools addreplacerg -@ 16 -r "@RG\tID:RG1\tSM:SampleName\tPL:Illumina\tLB:Library.fa" -o {output.rmChrM_reheaded_bam} {output.rmChrM_bam} &&
-        echo "marking duplicates" &&
-        picard MarkDuplicates QUIET=true INPUT={output.rmChrM_reheaded_bam} OUTPUT={output.marked_bam} \
-        METRICS_FILE={output.dup_metrics} REMOVE_DUPLICATES=false CREATE_INDEX=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=. &&
-        head -n 8 {output.dup_metrics} | cut -f 7,9 | grep -v ^# | tail -n 2 > {output.dup_txt} &&
-        samtools view -h -b -f 2 -F 1548 -q 30 {output.marked_bam} | samtools sort -o {output.filtered_bam} &&
-        samtools index {output.filtered_bam} &&
-        echo "`date -R`: Success! Filtering bam is done." || 
-        {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
-        """
-
-rule filter_blacklist:
-    input:
-        filtered_bam=rules.filter_bam.output.filtered_bam,
-        blacklist="resources/blacklists/ENCFF356LFX.bed"
-    output:
-        tmp_bam=temp("results/{sample}/{sample}_{build}_sorted.tmp.bam"),
-        blacklistfiltered_bam="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam",
-    threads: 16  
-    log:
-        "logs/rule/bowtie2/{sample}_{build}_filter_blacklist.log",
-    benchmark:
-        "logs/rule/bowtie2/{sample}_{build}_filter_blacklist.benchmark.txt",
-    conda:
-        "../envs/alignment.yaml"
-    shell:  
-        """
-        (echo "`date -R`: Filtering blscklist regions runs..." &&
-        bedtools intersect -nonamecheck -v -abam {input.filtered_bam} -b {input.blacklist} > {output.tmp_bam} &&
-        samtools sort -O bam -o {output.blacklistfiltered_bam} {output.tmp_bam} &&
-        samtools index {output.blacklistfiltered_bam} &&
-        echo "`date -R`: Success! Filtering blscklist regions is done." || 
-        {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
-        """
-
-rule bam2bw:
-    input:
-        blacklistfiltered_bam=rules.filter_blacklist.output.blacklistfiltered_bam,
-    output:
-        bw="results/{sample}/{sample}_{build}_coverage_RPKM.bw",
-    threads: 8  
-    log:
-        "logs/rule/bowtie2/{sample}_{build}_bam2bw.log",
-    benchmark:
-        "logs/rule/bowtie2/{sample}_{build}_bam2bw.benchmark.txt",
+        idxstats="results/alignment/{sample}/{sample}_{build}.idxstats",
+        flagstat="results/alignment/{sample}/{sample}_{build}.flagstat",
+        kept=temp("results/alignment/{sample}/{sample}_{build}.chroms.bam"),
+        marked=temp("results/alignment/{sample}/{sample}_{build}.marked.bam"),
+        dup_metrics="results/alignment/{sample}/{sample}_{build}.dup.metrics",
+        dup_txt="results/alignment/{sample}/{sample}_{build}.dup.txt",
+        filtered=temp("results/alignment/{sample}/{sample}_{build}.filtered.bam"),
     params:
-        bam2bw="--binSize 10 --normalizeUsing RPKM --effectiveGenomeSize 2701495711",
+        keep_chroms=config["genome"]["keep_chroms"],
+        min_mapq=config["alignment"]["min_mapq"],
+        tmpdir="results/alignment/{sample}",
+    threads: 8
+    resources:
+        mem_mb=32000,
+        runtime=1440,
+    log:
+        "logs/filter_bam/{sample}_{build}.log",
+    benchmark:
+        "logs/filter_bam/{sample}_{build}.benchmark.txt"
+    conda:
+        "../envs/alignment.yaml"
+    shell:
+        # Region queries on the indexed BAM keep coordinate order, so no re-sorting.
+        # -F 1804 = unmapped, mate unmapped, secondary, QC-fail, duplicate.
+        """
+        (echo "`date -R`: filter_bam starts..." &&
+        samtools idxstats {input.bam} > {output.idxstats} &&
+        samtools flagstat {input.bam} > {output.flagstat} &&
+        echo "keeping chromosomes matching {params.keep_chroms}" &&
+        samtools view -@ {threads} -b -o {output.kept} {input.bam} \
+            $(awk -v re='{params.keep_chroms}' '$1 ~ re && $3 > 0 {{print $1}}' {output.idxstats}) &&
+        echo "marking duplicates" &&
+        picard -Xmx24g MarkDuplicates --INPUT {output.kept} --OUTPUT {output.marked} \
+            --METRICS_FILE {output.dup_metrics} --REMOVE_DUPLICATES false \
+            --VALIDATION_STRINGENCY LENIENT --TMP_DIR {params.tmpdir} --QUIET true &&
+        awk -F'\\t' '/^LIBRARY/ {{for (i = 1; i <= NF; i++) col[$i] = i; getline;
+            print "READ_PAIR_DUPLICATES\\tPERCENT_DUPLICATION";
+            print $col["READ_PAIR_DUPLICATES"] "\\t" $col["PERCENT_DUPLICATION"]; exit}}' \
+            {output.dup_metrics} > {output.dup_txt} &&
+        echo "filtering: proper pairs, MAPQ >= {params.min_mapq}, no duplicates" &&
+        samtools view -@ {threads} -b -f 2 -F 1804 -q {params.min_mapq} -o {output.filtered} {output.marked} &&
+        echo "`date -R`: Success! Filtering bam is done." ||
+        {{ echo "`date -R`: Process failed..."; exit 1; }} ) > {log} 2>&1
+        """
+
+
+rule final_bam:
+    """Remove blacklisted reads, then drop orphan mates left by any filter."""
+    input:
+        bam=rules.filter_bam.output.filtered,
+        blacklist=config["genome"]["blacklist"],
+    output:
+        bam="results/alignment/{sample}/{sample}_{build}.final.bam",
+        bai="results/alignment/{sample}/{sample}_{build}.final.bam.bai",
+    params:
+        tmp="results/alignment/{sample}/{sample}_{build}.finaltmp",
+    threads: 8
+    resources:
+        mem_mb=24000,
+        runtime=720,
+    log:
+        "logs/final_bam/{sample}_{build}.log",
+    benchmark:
+        "logs/final_bam/{sample}_{build}.benchmark.txt"
+    conda:
+        "../envs/alignment.yaml"
+    shell:
+        # Name-sort -> fixmate flags reads whose mate was removed -> keep proper pairs only.
+        """
+        (echo "`date -R`: Removing blacklisted reads and orphan mates..." &&
+        bedtools intersect -nonamecheck -v -abam {input.bam} -b {input.blacklist} |
+        samtools sort -n -@ 4 -m 2G -T {params.tmp}.n - |
+        samtools fixmate -r - - |
+        samtools view -u -f 2 -F 1804 - |
+        samtools sort -@ 4 -m 2G -T {params.tmp}.c -o {output.bam} - &&
+        samtools index {output.bam} &&
+        echo "`date -R`: Success! Final BAM written." ||
+        {{ echo "`date -R`: Process failed..."; exit 1; }} ) > {log} 2>&1
+        """
+
+
+rule tn5_shift:
+    """Shift reads to Tn5 insertion sites (+4/-5) for peak calling."""
+    input:
+        bam=rules.final_bam.output.bam,
+        bai=rules.final_bam.output.bai,
+    output:
+        bam=temp("results/alignment/{sample}/{sample}_{build}.shifted.bam"),
+        bai=temp("results/alignment/{sample}/{sample}_{build}.shifted.bam.bai"),
+    params:
+        unsorted="results/alignment/{sample}/{sample}_{build}.shifted.unsorted.bam",
+        tmp="results/alignment/{sample}/{sample}_{build}.shifttmp",
+    threads: 8
+    resources:
+        mem_mb=16000,
+        runtime=720,
+    log:
+        "logs/tn5_shift/{sample}_{build}.log",
     conda:
         "../envs/deeptools.yaml"
-    shell:  
+    shell:
         """
-        (echo "`date -R`: Generating bw file..." &&
-        bamCoverage --numberOfProcessors {threads} {params.bam2bw} \
-        --bam {input.blacklistfiltered_bam} -o {output.bw} &&
-        echo "`date -R`: Success! Generating bw file done." || 
-        {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
+        (echo "`date -R`: Tn5 shift..." &&
+        alignmentSieve --ATACshift -p {threads} -b {input.bam} -o {params.unsorted} &&
+        samtools sort -@ 4 -m 2G -T {params.tmp} -o {output.bam} {params.unsorted} &&
+        samtools index {output.bam} &&
+        rm -f {params.unsorted} &&
+        echo "`date -R`: Success!" ||
+        {{ echo "`date -R`: Process failed..."; exit 1; }} ) > {log} 2>&1
         """
 
-rule legthdist:
+
+rule bigwig:
     input:
-        blacklistfiltered_bam=rules.filter_blacklist.output.blacklistfiltered_bam,
+        bam=rules.final_bam.output.bam,
+        bai=rules.final_bam.output.bai,
     output:
-        fraglen_stats="results/{sample}/{sample}_{build}_blacklist-filtered.fraglen.stats",
-        fraglen_pdf="results/processed_files/{sample}_{build}_blacklist-filtered.fraglen.pdf",
-    threads: 8  
+        bw="results/bigwig/{sample}_{build}_" + config["bigwig"]["normalize"] + ".bw",
+    params:
+        args=(
+            f"--binSize {config['bigwig']['bin_size']} "
+            f"--normalizeUsing {config['bigwig']['normalize']} "
+            f"--effectiveGenomeSize {config['genome']['effective_genome_size']}"
+        ),
+    threads: 8
+    resources:
+        mem_mb=16000,
+        runtime=480,
     log:
-        "logs/rule/bowtie2/{sample}_{build}_legthdist.log",
-    benchmark:
-        "logs/rule/bowtie2/{sample}_{build}_legthdist.benchmark.txt",
+        "logs/bigwig/{sample}_{build}.log",
     conda:
-        "../envs/picard.yaml"
-    shell:  
+        "../envs/deeptools.yaml"
+    shell:
         """
-        (echo "`date -R`: Generating length distribution of counts..." &&
-        picard CollectInsertSizeMetrics \
-        I={input.blacklistfiltered_bam} \
-        O={output.fraglen_stats} \
-        H={output.fraglen_pdf} M=0.5 &&
-        echo "`date -R`: Success! Generating length distribution of counts is done." || 
-        {{ echo "`date -R`: Process failed..."; exit 1; }}  )  > {log} 2>&1
+        (echo "`date -R`: Generating bigwig..." &&
+        bamCoverage --numberOfProcessors {threads} {params.args} \
+            --bam {input.bam} -o {output.bw} &&
+        echo "`date -R`: Success!" ||
+        {{ echo "`date -R`: Process failed..."; exit 1; }} ) > {log} 2>&1
         """
 
 
-
+rule fragment_length:
+    input:
+        bam=rules.final_bam.output.bam,
+    output:
+        stats="results/alignment/{sample}/{sample}_{build}.fraglen.stats",
+        pdf="results/alignment/{sample}/{sample}_{build}.fraglen.pdf",
+    resources:
+        mem_mb=16000,
+        runtime=240,
+    log:
+        "logs/fragment_length/{sample}_{build}.log",
+    conda:
+        "../envs/alignment.yaml"
+    shell:
+        """
+        (echo "`date -R`: Fragment length distribution..." &&
+        picard -Xmx12g CollectInsertSizeMetrics --INPUT {input.bam} \
+            --OUTPUT {output.stats} --Histogram_FILE {output.pdf} --MINIMUM_PCT 0.5 &&
+        echo "`date -R`: Success!" ||
+        {{ echo "`date -R`: Process failed..."; exit 1; }} ) > {log} 2>&1
+        """

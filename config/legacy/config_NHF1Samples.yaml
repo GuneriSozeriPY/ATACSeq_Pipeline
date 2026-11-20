@@ -1,0 +1,44 @@
+meta: 
+  NHF1noUV_R1_ATAC: {}
+  NHF1noUV_R2_ATAC: {}
+  NHF1_1h_R1_ATAC: {}
+  NHF1_1h_R2_ATAC: {}
+  NHF1_1m_R1_ATAC: {}
+  NHF1_1m_R2_ATAC: {}
+  NHF1_4h_R1_ATAC: {}
+  NHF1_4h_R2_ATAC: {}
+  NHF1_8h_R1_ATAC: {}
+  NHF1_8h_R2_ATAC: {}
+  NHF1_15m_R1_ATAC: {}
+  NHF1_15m_R2_ATAC: {}
+  NHF1_30m_R1_ATAC: {}
+  NHF1_30m_R2_ATAC: {}
+
+
+genome:
+  build: "hg38"
+  link: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz"
+  gtf_link: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/gencode.v48.basic.annotation.gtf.gz"
+
+conditions:
+  NHF1noUV:
+    - "NHF1noUV_R1_ATAC"
+    - "NHF1noUV_R2_ATAC"
+  NHF1_1h:
+    - "NHF1_1h_R1_ATAC"
+    - "NHF1_1h_R2_ATAC"
+  NHF1_1m:
+    - "NHF1_1m_R1_ATAC"
+    - "NHF1_1m_R2_ATAC"
+  NHF1_4h:
+    - "NHF1_4h_R1_ATAC"
+    - "NHF1_4h_R2_ATAC"
+  NHF1_8h:
+    - "NHF1_8h_R1_ATAC"
+    - "NHF1_8h_R2_ATAC"
+  NHF1_15m:
+    - "NHF1_15m_R1_ATAC"
+    - "NHF1_15m_R2_ATAC"
+  NHF1_30m:
+    - "NHF1_30m_R1_ATAC"
+    - "NHF1_30m_R2_ATAC"

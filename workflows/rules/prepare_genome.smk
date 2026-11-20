@@ -6,9 +6,9 @@ rule genome_download:
         link=config["genome"]["link"],
         build=config["genome"]["build"],
     log:
-        "logs/rule/genome_download/{build}.log",
+        "logs/genome_download/{build}.log",
     benchmark:
-        "logs/rule/genome_download/{build}.benchmark.txt",
+        "logs/genome_download/{build}.benchmark.txt",
     shell:
         """
         (echo "`date -R`: Downloading {params.build} genome..." &&
@@ -26,9 +26,9 @@ rule genome_build:
         "resources/ref_genomes/{build}/Bowtie2/genome_{build}",
         ".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", ".rev.1.bt2", ".rev.2.bt2"),
     log: 
-        "logs/rule/genome_build/{build}.log",
+        "logs/genome_build/{build}.log",
     benchmark:
-        "logs/rule/genome_build/{build}.benchmark.txt",
+        "logs/genome_build/{build}.benchmark.txt",
     params:
         extra="", 
         name="resources/ref_genomes/{build}/Bowtie2/genome_{build}",
@@ -53,9 +53,9 @@ rule genome_indexing:
     output:
         "resources/ref_genomes/{build}/genome_{build}.fa.fai",
     log: 
-        "logs/rule/genome_indexing/{build}.log",
+        "logs/genome_indexing/{build}.log",
     benchmark:
-        "logs/rule/genome_indexing/{build}.benchmark.txt",
+        "logs/genome_indexing/{build}.benchmark.txt",
     conda:
         "../envs/alignment.yaml"
     shell:

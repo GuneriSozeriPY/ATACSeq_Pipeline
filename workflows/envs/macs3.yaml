@@ -1,3 +1,6 @@
 name: macs3
+channels:
+  - conda-forge
+  - bioconda
 dependencies:
-  - bioconda::macs3 ==3.0.3
+  - macs3 =3.0.3

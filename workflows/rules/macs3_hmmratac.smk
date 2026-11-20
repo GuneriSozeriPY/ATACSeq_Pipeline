@@ -1,13 +1,16 @@
+# Optional, not included in the Snakefile: HMMRATAC peak calling (MACS3).
+# To use it, add `include: "workflows/rules/macs3_hmmratac.smk"` and request its outputs.
+
 rule macs3_cutoff_analysis:
     input:
-        bam="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam",
-        idx="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam.bai"
+        bam="results/alignment/{sample}/{sample}_{build}.final.bam",
+        idx="results/alignment/{sample}/{sample}_{build}.final.bam.bai"
     output:
-        cutoff="results/macs3_hmmratac/{sample}_{build}_hmmratac_cutoff_analysis.tsv"
+        cutoff="results/peaks/hmmratac/{sample}_{build}_hmmratac_cutoff_analysis.tsv"
     log:
-        "logs/macs3_hmmratac/{sample}_{build}_analysis.log"
+        "logs/hmmratac/{sample}_{build}_analysis.log"
     params:
-        outdir="results/macs3_hmmratac",
+        outdir="results/peaks/hmmratac",
        name="{sample}_{build}_hmmratac",
         extra="-f BAMPE --cutoff-analysis-only" 
     conda:
@@ -24,15 +27,15 @@ rule macs3_cutoff_analysis:
 # --- Rule 2: Final HMMRATAC Calling (Logic embedded in Shell) ---
 rule macs3_hmmratac_final:
     input:
-        bam="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam",
-        idx="results/{sample}/{sample}_{build}_sorted.blacklist-filtered.bam.bai",
-        cutoff="results/macs3_hmmratac/{sample}_{build}_hmmratac_cutoff_analysis.tsv"
+        bam="results/alignment/{sample}/{sample}_{build}.final.bam",
+        idx="results/alignment/{sample}/{sample}_{build}.final.bam.bai",
+        cutoff="results/peaks/hmmratac/{sample}_{build}_hmmratac_cutoff_analysis.tsv"
     output:
-        gapped_peak="results/macs3_hmmratac/{sample}_{build}_hmmratac_final_accessible_regions.gappedPeak",
+        gapped_peak="results/peaks/hmmratac/{sample}_{build}_hmmratac_final_accessible_regions.gappedPeak",
     log:
-        "logs/macs3_hmmratac/{sample}_{build}_calling.log"
+        "logs/hmmratac/{sample}_{build}_calling.log"
     params:
-        outdir="results/macs3_hmmratac/",
+        outdir="results/peaks/hmmratac/",
         name="{sample}_{build}_hmmratac_final",
         base_extra="-f BAMPE"
     conda:

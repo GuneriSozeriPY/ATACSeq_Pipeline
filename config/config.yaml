@@ -1,48 +1,44 @@
-meta: 
-  HelanoUV_R3_ATAC_combined26: {}
-  HelanoUV_R1_ATAC_TAAGGCGA-TAGATCGC_S7_combined26: {}
-  Hela_1h_R1_ATAC_combined26: {}
-  Hela_1h_R3_ATAC_combined26: {}
-  Hela_1m_R1_ATAC_combined26: {}
-  Hela_1m_R3_ATAC_AGGCAGAA-CTCTCTAT_S3: {}
-  Hela_4h_R1_ATAC: {}
-  Hela_4h_R3_ATAC_TCCTGAGC-CTCTCTAT_S4: {}
-  Hela_8h_R1_ATAC_CGTACTAG-TATCCTCT_S5_combined26: {}
-  Hela_8h_R3_ATAC_TCCTGAGC-TATCCTCT_S6: {}
-  Hela_15m_R1_ATAC_TAAGGCGA-TATCCTCT_S1: {}
-  Hela_15m_R3_ATAC_AGGCAGAA-TATCCTCT_S2: {}
-  Hela_30m_R1_ATAC_combined26: {}
-  Hela_30m_R3_ATAC_combined26: {}
-
+# ATAC-seq pipeline configuration.
+# Samples (names, cell line, condition, replicate, FASTQ paths) live in the sample sheet.
+samples: "config/samples.tsv"
 
 genome:
   build: "hg38"
   link: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz"
+  gtf_link: "https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/gencode.v48.basic.annotation.gtf.gz"
+  # deepTools effective genome size for GRCh38 at 50 bp read length (reads are 51 bp).
+  effective_genome_size: 2701495761
+  blacklist: "resources/blacklists/ENCFF356LFX.bed"
+  # Chromosomes kept after alignment (regex). Drops chrM and unplaced/alt contigs.
+  keep_chroms: "^chr([0-9]+|X|Y)$"
 
+trimming:
+  # Nextera/Tn5 adapter. -g trims poly-G tails (2-colour chemistry).
+  adapter_r1: "CTGTCTCTTATACACATCT"
+  adapter_r2: "CTGTCTCTTATACACATCT"
+  extra: "-g"
 
-# genome:
-#   build: "hg38_r44"
-#   link: "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_44/GRCh38.p14.genome.fa.gz"
+alignment:
+  bowtie2: "--local --very-sensitive --no-mixed --no-discordant -I 25 -X 2000 --seed 42"
+  min_mapq: 30
 
-conditions:
-  HelanoUV:
-    - "HelanoUV_R3_ATAC_combined26"
-    - "HelanoUV_R1_ATAC_TAAGGCGA-TAGATCGC_S7_combined26"
-  Hela_1h:
-    - "Hela_1h_R1_ATAC_combined26"
-    - "Hela_1h_R3_ATAC_combined26"
-  Hela_1m:
-    - "Hela_1m_R1_ATAC_combined26"
-    - "Hela_1m_R3_ATAC_AGGCAGAA-CTCTCTAT_S3"
-  Hela_4h:
-    - "Hela_4h_R1_ATAC"
-    - "Hela_4h_R3_ATAC_TCCTGAGC-CTCTCTAT_S4"
-  Hela_8h:
-    - "Hela_8h_R1_ATAC_CGTACTAG-TATCCTCT_S5_combined26"
-    - "Hela_8h_R3_ATAC_TCCTGAGC-TATCCTCT_S6"
-  Hela_15m:
-    - "Hela_15m_R1_ATAC_TAAGGCGA-TATCCTCT_S1"
-    - "Hela_15m_R3_ATAC_AGGCAGAA-TATCCTCT_S2"
-  Hela_30m:
-    - "Hela_30m_R1_ATAC_combined26"
-    - "Hela_30m_R3_ATAC_combined26"
+peaks:
+  # ENCODE-style ATAC peak calling (MACS3 callpeak) on Tn5-shifted insertion sites.
+  macs3: "--nomodel --shift -75 --extsize 150 --keep-dup all --call-summits"
+  pvalue: 0.01          # relaxed threshold for IDR input
+  max_peaks: 300000     # keep the top N peaks (by p-value) per replicate for IDR
+  idr_threshold: 0.05
+  frip_qvalue: 0.05     # MACS3 peaks used for per-sample FRiP: q < this value
+
+bigwig:
+  bin_size: 10
+  normalize: "RPKM"
+
+differential:
+  # DiffBind (DESeq2 inside), per cell line, design ~ Replicate + Condition.
+  reference: "noUV"     # every other condition is compared to this one, per cell line
+  fdr: 0.05
+  # "lib" = total library size (DiffBind default, robust when many peaks change);
+  # "RLE" = DESeq2 median-of-ratios on reads in peaks.
+  normalization: "lib"
+  summit_width: 250     # consensus peaks re-centred on summits, +/- this many bp

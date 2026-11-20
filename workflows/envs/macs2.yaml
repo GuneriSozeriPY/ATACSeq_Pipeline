@@ -1,3 +1,0 @@
-name: macs2
-dependencies:
-  - bioconda::macs2 ==2.2.7.1
